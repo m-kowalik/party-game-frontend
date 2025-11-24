@@ -62,6 +62,13 @@ export function useSpyGameHubConnection(hubUrl: string = HUB_BASE_URL) {
       setPlayers(prev => 
         prev.map(player => player.id === playerGameScore.playerId ? {...player, score: playerGameScore.score} : player));
     })
+    conn.on("GameEnded", () => {
+        setGameStarted(false);
+        setRole(null);
+        setQuestion(null);
+        setTime(null);
+        setAnsweringPlayer(null);
+    })
     conn.on("Error", (err) => console.error("Game hub error:", err));
     
 
@@ -72,5 +79,17 @@ export function useSpyGameHubConnection(hubUrl: string = HUB_BASE_URL) {
     };
   }, []);
 
-  return { connection: connectionRef.current, connected, gameId, game, role, players, playerId, gameStarted, question, time, answeringPlayer };
+  return { 
+    connection: connectionRef.current, 
+    connected, 
+    gameId, 
+    game, 
+    role, 
+    players, 
+    playerId, 
+    gameStarted, 
+    question, 
+    time,
+    answeringPlayer
+  };
 }

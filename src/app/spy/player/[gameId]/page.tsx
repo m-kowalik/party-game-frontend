@@ -19,14 +19,27 @@ interface PageProps {
   };
 }
 
-type View = 'JOIN' | 'WAITING' | 'GAME' | 'PICK_SPY';
+type View = 'JOIN' | 'WAITING' | 'GAME' | 'PICK_SPY' | 'GAME_END';
 
 const PlayerPage = ({ params }: { params: Promise<{ gameId: string }> }) => {
     const { gameId } = useParams();
-    const { connection, connected: gameConnected, game, role, gameId: currentGameId, playerId, question, time, gameStarted, answeringPlayer, players } = useSpyGameHubConnection();
+    const { 
+        connection, 
+        connected: gameConnected, 
+        game, 
+        role, 
+        gameId: currentGameId, 
+        playerId, 
+        question, 
+        time, 
+        gameStarted, 
+        answeringPlayer, 
+        players
+    } = useSpyGameHubConnection();
     const {secondsLeft} = useTimer(time ? time.endTime : null);
     const isCurrentAnswerer = answeringPlayer?.id === playerId;
     const [view, setView] = useState<View>('JOIN');
+    const [isAnsweringPlayer, setIsAnsweringPlayer] = useState<boolean>(false);
     const nickRef = React.useRef<HTMLInputElement>(null);
     
     const otherPlayers = useMemo(() => players.filter(p => p.id !== playerId), [players, playerId]);
@@ -36,6 +49,12 @@ const PlayerPage = ({ params }: { params: Promise<{ gameId: string }> }) => {
         else if (!gameStarted) setView('WAITING');
         else setView('GAME');
     }, [currentGameId, gameStarted]);
+
+    useEffect(() => {
+        if(!connection) return;
+        connection.on('GameEnded', () => setView('GAME_END'));
+        connection.on('IsAnsweringPlayer', setIsAnsweringPlayer);
+    }, [connection])
 
 
     const joinGame = async (event: React.FormEvent) => {
@@ -47,10 +66,10 @@ const PlayerPage = ({ params }: { params: Promise<{ gameId: string }> }) => {
     const answered = async () => {
         if (!connection) return;
         await connection.invoke("Answered", gameId);
+        setIsAnsweringPlayer(false);
     }
 
     const handlePickSpy = async (playerId: string) => {
-        console.log('picked', playerId);
         if (!connection) return;
         await connection.invoke("PickSpy", gameId, playerId);
     }
@@ -80,7 +99,7 @@ const PlayerPage = ({ params }: { params: Promise<{ gameId: string }> }) => {
                     {role && <h2>{role}</h2>}
                     {question && <Question key={question}>{question}</Question>}
                     {role !== 'Spy' && <Button onClick={() => setView('PICK_SPY')}>Pick a spy</Button>}
-                    {isCurrentAnswerer && <Button onClick={answered}>Answered</Button>}
+                    {isAnsweringPlayer && <Button onClick={answered}>Answered</Button>}
                 </>
             )}
             {view === 'PICK_SPY' && (
@@ -88,6 +107,11 @@ const PlayerPage = ({ params }: { params: Promise<{ gameId: string }> }) => {
                     <h1>Pick a spy:</h1>
                     {players && <SpyPicker players={otherPlayers} onSubmit={handlePickSpy}/>}
                     <Button onClick={() => setView('GAME')}>Back</Button>
+                </>
+            )}
+            {view === 'GAME_END' && (
+                <>
+                    <h1>Game end!</h1>
                 </>
             )}
 

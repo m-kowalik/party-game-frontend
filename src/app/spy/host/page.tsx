@@ -17,6 +17,16 @@ export default function HostPage() {
   const { connection, connected, gameId, game, players, gameStarted, question, time, answeringPlayer } = useSpyGameHubConnection();
   const {secondsLeft} = useTimer(time ? time.endTime : null);
 
+  useEffect(() => {
+      (async () => {
+        if (!connection) return;
+        if (!gameStarted) return;
+        await connection.invoke("AssignRoles", gameId);
+        await connection.invoke("GetQuestion", gameId);
+        await connection.invoke("EndGame", gameId);
+      })();
+    }, [connection, gameStarted]);
+
   const createGame = async () => {
     if (!connection) return;
     await connection.invoke("CreateGame");
@@ -27,14 +37,7 @@ export default function HostPage() {
     await connection.invoke("StartGame", gameId);
   }
 
-  useEffect(() => {
-    (async () => {
-      if (!connection) return;
-      if (!gameStarted) return;
-      await connection.invoke("AssignRoles", gameId);
-      await connection.invoke("GetQuestion", gameId);
-    })();
-  }, [connection, gameStarted]);
+  
 
   const openGameInAnotherTab = () => {
     window.open(`http://localhost:3000/spy/player/${gameId}`, "_blank");
@@ -73,7 +76,6 @@ export default function HostPage() {
               <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '16px'}}>
                 {secondsLeft && <h1>{formatTime(secondsLeft)}</h1>}
                 <h2>{question}</h2>
-                <Button onClick={getQuestion}>Get Question</Button>
               </div>
             )}
           </CenteredContent>
