@@ -11,7 +11,15 @@ export type Player = {
     nick: string;
     isSpy: boolean;
     isDisplay: boolean;
+    score?: number;
 };
+
+export type PlayerGameScore = {
+    id: string;
+    gameId: string;
+    playerId: string;
+    score: number;
+}
 
 export type JoinedGameDto = {
     gameId: string;

@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
-import { GameTime, JoinedGameDto, Player, SpyGame } from "@/types/spyGame";
+import { GameTime, JoinedGameDto, Player, PlayerGameScore, SpyGame } from "@/types/spyGame";
 import { start } from "repl";
 
-const HUB_BASE_URL = "http://localhost:5000/hubs/game/spy";
+const EXTERNAL_BACKEND_URL = "http://192.168.0.158:5000"
+const INTERNAL_BACKEND_URL = "http://localhost:5000";
+const HUB_BASE_URL = `${INTERNAL_BACKEND_URL}/hubs/game/spy`;
 
 export function useSpyGameHubConnection(hubUrl: string = HUB_BASE_URL) {
   const connectionRef = useRef<signalR.HubConnection | null>(null);
@@ -18,6 +20,7 @@ export function useSpyGameHubConnection(hubUrl: string = HUB_BASE_URL) {
   const [gameStarted, setGameStarted] = useState(false);
   const [question, setQuestion] = useState<string | null>(null);
   const [time, setTime] = useState<GameTime | null>(null);
+  const [answeringPlayer, setAnsweringPlayer] = useState<Player | null>(null);
 
   useEffect(() => {
     const conn = new signalR.HubConnectionBuilder()
@@ -52,6 +55,13 @@ export function useSpyGameHubConnection(hubUrl: string = HUB_BASE_URL) {
     conn.on("TimeReceived", ({startTime, endTime}: {startTime: string, endTime: string}) => {
       setTime({startTime: new Date(startTime), endTime: new Date(endTime)});
     })
+    conn.on("AnsweringPlayerReceived", (player: Player) => {
+      setAnsweringPlayer(player);
+    })
+    conn.on("PlayerGameScoreReceived", (playerGameScore: PlayerGameScore) => {
+      setPlayers(prev => 
+        prev.map(player => player.id === playerGameScore.playerId ? {...player, score: playerGameScore.score} : player));
+    })
     conn.on("Error", (err) => console.error("Game hub error:", err));
     
 
@@ -62,5 +72,5 @@ export function useSpyGameHubConnection(hubUrl: string = HUB_BASE_URL) {
     };
   }, []);
 
-  return { connection: connectionRef.current, connected, gameId, game, role, players, playerId, gameStarted, question, time };
+  return { connection: connectionRef.current, connected, gameId, game, role, players, playerId, gameStarted, question, time, answeringPlayer };
 }

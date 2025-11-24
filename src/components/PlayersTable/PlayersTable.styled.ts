@@ -5,9 +5,9 @@ export const Table = styled.table`
     min-width: 200px;
 `;
 
-export const TableRow = styled.tr`
-    background: var(--foreground-secondary);
-
+export const TableRow = styled.tr<{$answering: boolean}>`
+    background: ${(props) => (props.$answering ? '#ff00002f' : 'var(--foreground-secondary)')};
+    border: 1px solid green;
     opacity: 0;
     transform: translateY(50px);
     animation: fadeInUp 0.4s ease forwards;

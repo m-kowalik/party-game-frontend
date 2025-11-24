@@ -5,15 +5,16 @@ import { useSpyGameHubConnection } from "@/hooks/useSpyGameHubConnection";
 import { Player } from "@/types/player";
 import { QRCodeSVG } from "qrcode.react";
 import { use, useEffect, useState } from "react";
-import { CenteredContent, ConnectionDot, Container, QRCodeWrapper } from "./page.styled";
+import { CenteredContent, Container, QRCodeWrapper } from "./page.styled";
 import SplitLayout from "@/components/SplitLayout/SplitLayout";
 import { Button } from "@/components/Button/Button";
 import PlayersTable from "@/components/PlayersTable/PlayersTable";
 import { useTimer } from "@/hooks/useTimer";
 import { formatTime } from "@/utils/time";
+import { ConnectionDot } from "@/components/ConnectionDot/ConnectionDot";
 
 export default function HostPage() {
-  const { connection, connected, gameId, game, players, gameStarted, question, time } = useSpyGameHubConnection();
+  const { connection, connected, gameId, game, players, gameStarted, question, time, answeringPlayer } = useSpyGameHubConnection();
   const {secondsLeft} = useTimer(time ? time.endTime : null);
 
   const createGame = async () => {
@@ -49,7 +50,7 @@ export default function HostPage() {
     <Container>
       <SplitLayout>
         <SplitLayout.Left>
-          <ConnectionDot connected={connected} /> 
+          <ConnectionDot $connected={connected} /> 
           <CenteredContent>
             {!gameId &&
               <Button onClick={createGame}>Create game</Button>
@@ -80,7 +81,7 @@ export default function HostPage() {
         <SplitLayout.Right>
           <h2 style={{marginTop: '40px', textAlign: 'center'}}>Players:</h2>
           <CenteredContent>
-            <PlayersTable players={players}/>
+            <PlayersTable players={players} answeringPlayer={answeringPlayer} />
           </CenteredContent>
         </SplitLayout.Right> 
       </SplitLayout>
